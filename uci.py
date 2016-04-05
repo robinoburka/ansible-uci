@@ -16,12 +16,134 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
+
+def val_or_none(params, key):
+    if key not in params:
+        return None
+
+    return params[key]
+
+
+def get_uci_key(package, config, type, index, name):
+    if config:
+        return "{}.{}.{}".format(package, config, name)
+
+    elif type and index:
+        return "{}.@{}[{}].{}".format(package, type, index, name)
+
+    else:
+        module.fail_json(msg="Definition of the key is ambiguous.")
+
+
+def split_key(key):
+    parts = key.split(".")
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    elif len(parts) == 3:
+        return parts[0], parts[1], parts[2]
+
+
+def uci_commit(module, binary, package):
+    status, stdout, stderr = module.run_command("{} commit {}".format(binary, package))
+    if status != 0:
+        module.fail_json(msg="Commit failed with: {}".format(stderr))
+
+
+def uci_delete(module, binary, key):
+    status, stdout, stderr = module.run_command("{} delete {}".format(binary, key))
+    if status != 0:
+        module.fail_json(msg="Command uci failed with: {}".format(stderr))
+
+    uci_commit(module, binary, split_key(key)[0])
+    module.exit_json(changed=True)
+
+
+def uci_get(module, binary, key):
+    status, stdout, stderr = module.run_command("{} get {}".format(binary, key))
+
+    if status == 0:
+        return stdout.strip()
+
+    else:
+        if stderr.find("Entry not found") == -1:
+            module.fail_json(msg="Command uci failed with: {}".format(stderr))
+
+        else:
+            return None
+
+
+def uci_set(module, binary, key, value):
+    status, stdout, stderr = module.run_command("{} set {}='{}'".format(binary, key, value))
+    if status != 0:
+        module.fail_json(msg="Command uci failed with: {}".format(stderr))
+
+    uci_commit(module, binary, split_key(key)[0])
+    module.exit_json(changed=True)
+
+
 def main():
     module = AnsibleModule(
         argument_spec = dict(
-            name = dict(aliases=["key"], required=True)
+            name = dict(aliases=["key"], required=True),
+            value = dict(aliases=["val"], required=False),
+            package = dict(aliases=["p"], required=True),
+            config = dict(aliases=["c"], required=False),
+            type = dict(required=False),
+            index = dict(required=False),
+            item  = dict(default="option", choices=["option", "list"]),
+            state  = dict(default="present", choices=["present", "absent"]),
+            create = dict(default="yes", type='bool')
         )
     )
+
+    bin_path = module.get_bin_path('uci', True, ['/sbin', '/bin'])
+
+    if not bin_path:
+        module.fail_json(msg="Binary 'uci' not found.")
+
+    p = module.params
+
+    ## Receive values for better manipulation
+    name = val_or_none(p, "name")
+    value = val_or_none(p, "value")
+    package = val_or_none(p, "package")
+    config = val_or_none(p, "config")
+    type = val_or_none(p, "type")
+    index = val_or_none(p, "index")
+    item = val_or_none(p, "item")
+    state = val_or_none(p, "state")
+    create = val_or_none(p, "create")
+
+    ## Report unimplemented features
+    if item == "list":
+        module.fail_json(msg="Item of type 'list' is unimplemented for now")
+
+    ## Get key and value - I need to make decisions
+    key = get_uci_key(package, config, type, index, name)
+    val = uci_get(module, bin_path, key)
+
+    ## Handle deletes
+    if state == "absent":
+        if not val:
+            module.exit_json(changed=False)
+        else:
+            uci_delete(module, bin_path, key)
+
+    ## Handle create or update requests
+    if not val and not create:
+        module.fail_json(msg="Key doesn't exist.")
+
+    if not val and create:
+        module.fail_json(msg="TODO: Create intermediates")
+
+    if val and not value:
+        module.fail_json(msg="Value wasn't provided")
+
+    if val and value:
+        if val == value:
+            module.exit_json(changed=False)
+        else:
+            uci_set(module, bin_path, key, p["value"])
 
 
 # import module snippets
