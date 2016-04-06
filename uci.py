@@ -26,12 +26,18 @@ def val_or_none(params, key):
 
 def get_uci_key(package, section, type, index, name):
     if section:
-        key = "{}.{}.{}".format(package, section, name)
+        if name:
+            key = "{}.{}.{}".format(package, section, name)
+        else:
+            key = None
         skey = "{}.{}".format(package, section)
         return key, skey
 
     elif type and index:
-        key = "{}.@{}[{}].{}".format(package, type, index, name)
+        if name:
+            key = "{}.@{}[{}].{}".format(package, type, index, name)
+        else:
+            key = None
         skey = "{}.@{}[{}]".format(package, type, index)
         return key, skey
 
