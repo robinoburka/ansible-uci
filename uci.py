@@ -134,7 +134,13 @@ def main():
 
     ## Get key and value - I need to make decisions
     key, skey = get_uci_key(package, section, type, index, name)
-    val = uci_get(module, bin_path, key)
+    if key:
+        val = uci_get(module, bin_path, key)
+    else:
+        val = None
+
+    if not val:
+        sval = uci_get(module, bin_path, skey)
 
     ## Handle deletes
     if state == "absent":
