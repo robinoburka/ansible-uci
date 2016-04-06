@@ -16,6 +16,71 @@
 # You should have received a copy of the GNU General Public License
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 
+DOCUMENTATION = '''
+---
+module: uci
+author: "Robin Obůrka"
+short_description: Manipulates with UCI configuration files
+description:
+    - Manipulates with UCI configuration files on OpenWrt operating system.
+version_added: "1.1"
+options:
+    name:
+        description:
+            - name of option to set/delete
+        required: false
+        aliases: key
+    value:
+        description:
+            - value of changed option
+        required: false
+        aliases: val
+    package:
+        description:
+            - package where is the section located
+        required: true
+        aliases: p
+    section:
+        description:
+            - name of manipulated section
+        required: false
+        aliases: s
+    type:
+        description:
+            - type of section - necessary information for non-existing sections
+        required: false
+    index:
+        description:
+            - index of anonymous section
+        required: false
+    item:
+        description:
+            - value is option/list
+        choices: [ 'option', 'list' ]
+        required: false
+        default: option
+    state:
+        description:
+            - state of the section/option
+        choices: [ 'present', 'absent' ]
+        required: false
+        default: present
+    create:
+        description:
+            - enable or disable creating of non-existing sections/options
+        choices: [ 'yes', 'no' ]
+        required: false
+        default: yes
+notes:  []
+'''
+EXAMPLES = '''
+- uci: p=dhcp s=lan name=start val=100
+- uci: p=dhcp s=computer type=host name=ip val=1.0.0.0
+- uci: p=dhcp s=computer type=host name=ip val=1.0.0.0 state=absent
+- uci: p=dhcp s=computer2 type=host
+- uci: p=dhcp s=computer2 state=absent
+'''
+
 
 def val_or_none(params, key):
     if key not in params:
