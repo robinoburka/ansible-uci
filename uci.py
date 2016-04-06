@@ -24,9 +24,9 @@ def val_or_none(params, key):
     return params[key]
 
 
-def get_uci_key(package, config, type, index, name):
-    if config:
-        return "{}.{}.{}".format(package, config, name)
+def get_uci_key(package, section, type, index, name):
+    if section:
+        return "{}.{}.{}".format(package, section, name)
 
     elif type and index:
         return "{}.@{}[{}].{}".format(package, type, index, name)
@@ -87,7 +87,7 @@ def main():
             name = dict(aliases=["key"], required=True),
             value = dict(aliases=["val"], required=False),
             package = dict(aliases=["p"], required=True),
-            config = dict(aliases=["c"], required=False),
+            section = dict(aliases=["s"], required=False),
             type = dict(required=False),
             index = dict(required=False),
             item  = dict(default="option", choices=["option", "list"]),
@@ -107,7 +107,7 @@ def main():
     name = val_or_none(p, "name")
     value = val_or_none(p, "value")
     package = val_or_none(p, "package")
-    config = val_or_none(p, "config")
+    section = val_or_none(p, "section")
     type = val_or_none(p, "type")
     index = val_or_none(p, "index")
     item = val_or_none(p, "item")
@@ -119,7 +119,7 @@ def main():
         module.fail_json(msg="Item of type 'list' is unimplemented for now")
 
     ## Get key and value - I need to make decisions
-    key = get_uci_key(package, config, type, index, name)
+    key = get_uci_key(package, section, type, index, name)
     val = uci_get(module, bin_path, key)
 
     ## Handle deletes
