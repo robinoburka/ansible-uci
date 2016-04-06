@@ -83,6 +83,9 @@ def uci_get(module, binary, key):
 
 
 def uci_set(module, binary, key, value, noreturn=False):
+    if not value:
+        module.fail_json(msg="Value wasn't provided")
+
     status, stdout, stderr = module.run_command("{} set {}='{}'".format(binary, key, value))
     if status != 0:
         module.fail_json(msg="Command uci failed with: {}".format(stderr))
