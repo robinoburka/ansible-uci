@@ -144,26 +144,61 @@ def main():
 
     ## Handle deletes
     if state == "absent":
-        if not val:
-            module.exit_json(changed=False)
+        if not key:
+        ## User manipulates with section only
+            if sval:
+                uci_delete(module, bin_path, skey)
+            else:
+                module.exit_json(changed=False)
         else:
-            uci_delete(module, bin_path, key)
+            ## User manipulates with key
+            if val:
+                uci_delete(module, bin_path, key)
+            else:
+                module.exit_json(changed=False)
 
     ## Handle create or update requests
-    if not val and not create:
-        module.fail_json(msg="Key doesn't exist.")
-
-    if not val and create:
-        module.fail_json(msg="TODO: Create intermediates")
-
-    if val and not value:
-        module.fail_json(msg="Value wasn't provided")
-
-    if val and value:
-        if val == value:
-            module.exit_json(changed=False)
+    if not key:
+        ## User manipulates with section only
+        if not sval:
+            ## ... and section doesn't exists
+            if create:
+                if not type:
+                    module.fail_json(msg="Is necessary to create section but type wasn't specified")
+                uci_set(module, bin_path, skey, type)
+            else:
+                module.fail_json(msg="Section doesn't exist.")
         else:
-            uci_set(module, bin_path, key, p["value"])
+            ## Section exists
+            module.exit_json(changed=False)
+    else:
+        ## User manipulates with key
+        if val:
+            ## Some value under key is available
+            if val == value:
+                module.exit_json(changed=False)
+            else:
+                uci_set(module, bin_path, key, value)
+
+        elif not val and sval and create:
+            ## Option doesn't exists but is possible to create it
+            uci_set(module, bin_path, key, value)
+
+        elif not val and sval and not create:
+            module.fail_json(msg="Key doesn't exist.")
+
+        elif not val and not sval and create:
+            ## Option doesn't exists because section doesn't exists and is possible to create it
+            if not type:
+                module.fail_json(msg="Is necessary to create section but type wasn't specified")
+            uci_set(module, bin_path, skey, type, noreturn=True)
+            uci_set(module, bin_path, key, value)
+
+        elif not val and not sval and not create:
+            module.fail_json(msg="Section doesn't exist.")
+
+        else:
+            module.fail_json(msg="There is some bug in logic")
 
 
 # import module snippets
