@@ -76,13 +76,14 @@ def uci_get(module, binary, key):
             return None
 
 
-def uci_set(module, binary, key, value):
+def uci_set(module, binary, key, value, noreturn=False):
     status, stdout, stderr = module.run_command("{} set {}='{}'".format(binary, key, value))
     if status != 0:
         module.fail_json(msg="Command uci failed with: {}".format(stderr))
 
-    uci_commit(module, binary, split_key(key)[0])
-    module.exit_json(changed=True)
+    if not noreturn:
+        uci_commit(module, binary, split_key(key)[0])
+        module.exit_json(changed=True)
 
 
 def main():
