@@ -26,10 +26,14 @@ def val_or_none(params, key):
 
 def get_uci_key(package, section, type, index, name):
     if section:
-        return "{}.{}.{}".format(package, section, name)
+        key = "{}.{}.{}".format(package, section, name)
+        skey = "{}.{}".format(package, section)
+        return key, skey
 
     elif type and index:
-        return "{}.@{}[{}].{}".format(package, type, index, name)
+        key = "{}.@{}[{}].{}".format(package, type, index, name)
+        skey = "{}.@{}[{}]".format(package, type, index)
+        return key, skey
 
     else:
         module.fail_json(msg="Definition of the key is ambiguous.")
@@ -119,7 +123,7 @@ def main():
         module.fail_json(msg="Item of type 'list' is unimplemented for now")
 
     ## Get key and value - I need to make decisions
-    key = get_uci_key(package, section, type, index, name)
+    key, skey = get_uci_key(package, section, type, index, name)
     val = uci_get(module, bin_path, key)
 
     ## Handle deletes
