@@ -89,7 +89,7 @@ def uci_set(module, binary, key, value, noreturn=False):
 def main():
     module = AnsibleModule(
         argument_spec = dict(
-            name = dict(aliases=["key"], required=True),
+            name = dict(aliases=["key"], required=False),
             value = dict(aliases=["val"], required=False),
             package = dict(aliases=["p"], required=True),
             section = dict(aliases=["s"], required=False),
