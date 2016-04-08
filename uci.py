@@ -19,7 +19,7 @@
 DOCUMENTATION = '''
 ---
 module: uci
-author: "Robin Obůrka"
+author: "Robin Obůrka, @robinoburka"
 short_description: Manipulates with UCI configuration files
 description:
     - Manipulates with UCI configuration files on OpenWrt operating system.
