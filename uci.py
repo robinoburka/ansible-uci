@@ -89,7 +89,7 @@ def val_or_none(params, key):
     return params[key]
 
 
-def get_uci_key(package, section, type, index, name):
+def get_uci_key(module, package, section, type, index, name):
     if section:
         if name:
             key = "{}.{}.{}".format(package, section, name)
@@ -193,12 +193,13 @@ def main():
     state = val_or_none(p, "state")
     create = val_or_none(p, "create")
 
+
     ## Report unimplemented features
     if item == "list":
         module.fail_json(msg="Item of type 'list' is unimplemented for now")
 
     ## Get key and value - I need to make decisions
-    key, skey = get_uci_key(package, section, type, index, name)
+    key, skey = get_uci_key(module, package, section, type, index, name)
     if key:
         val = uci_get(module, bin_path, key)
     else:
