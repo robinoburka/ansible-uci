@@ -52,7 +52,9 @@ options:
     index:
         description:
             - index of anonymous section
+            - defaults to 0 so the unique section is possible to access only trough its type
         required: false
+        default: 0
     item:
         description:
             - value is option/list
@@ -168,7 +170,7 @@ def main():
             package = dict(aliases=["p"], required=True),
             section = dict(aliases=["s"], required=False),
             type = dict(required=False),
-            index = dict(required=False),
+            index = dict(default="0", required=False),
             item  = dict(default="option", choices=["option", "list"]),
             state  = dict(default="present", choices=["present", "absent"]),
             create = dict(default="yes", type='bool')
