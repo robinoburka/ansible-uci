@@ -76,11 +76,29 @@ options:
 notes:  []
 '''
 EXAMPLES = '''
+# Set option in named section dhcp.lan.start to 100
 - uci: p=dhcp s=lan name=start val=100
+
+# Set option (and create if not exists) in named section of type host dhcp.computer.ip
 - uci: p=dhcp s=computer type=host name=ip val=1.0.0.0
-- uci: p=dhcp s=computer type=host name=ip val=1.0.0.0 state=absent
+
+# Delete option in named section dhcp.computer.ip (doesn't delete empty section)
+- uci: p=dhcp s=computer name=ip val=1.0.0.0 state=absent
+
+# Create new named section of type host
 - uci: p=dhcp s=computer2 type=host
+
+# Delete whole named section
 - uci: p=dhcp s=computer2 state=absent
+
+# Please note that using anonymous section with Ansible is not good idea.
+# The unique anonymous sections (always with index 0) are to only reasonable exception
+
+# Set option in unique anonymous section of type dnsmasq dhcp.@dnsmasq[0].domain to example.com
+- uci: p=dhcp type=dnsmasq name=domain val=example.com
+
+# ... or specify the index explicitly
+- uci: p=dhcp type=dnsmasq index=0 name=domain val=example.com
 '''
 
 
