@@ -284,7 +284,7 @@ def main():
             module.fail_json(msg="Section doesn't exist.")
 
         else:
-            module.fail_json(msg="There is some bug in logic")
+            module.fail_json(msg="There is some bug in logic. Please report it.")
 
 
 # import module snippets
