@@ -138,14 +138,34 @@ def split_key(key):
         return parts[0], parts[1], parts[2]
 
 
+def is_set(item, val, expected=None):
+    if not expected:
+        return val
+    else:
+        if item == "option":
+            return expected == val
+        else:
+            if val.find(expected) == -1:
+                return False
+            else:
+                return True
+
+
 def uci_commit(module, binary, package):
     status, stdout, stderr = module.run_command("{} commit {}".format(binary, package))
     if status != 0:
         module.fail_json(msg="Commit failed with: {}".format(stderr))
 
 
-def uci_delete(module, binary, key):
-    status, stdout, stderr = module.run_command("{} delete {}".format(binary, key))
+def uci_delete(module, binary, item, key, val=None):
+    if item == "list" and not val:
+        module.fail_json(msg="Delete of list's item requested but no value specified")
+
+    if item == "option":
+        status, stdout, stderr = module.run_command("{} delete {}".format(binary, key))
+    else:
+        status, stdout, stderr = module.run_command("{} del_list {}={}".format(binary, key, val))
+
     if status != 0:
         module.fail_json(msg="Command uci failed with: {}".format(stderr))
 
@@ -167,11 +187,13 @@ def uci_get(module, binary, key):
             return None
 
 
-def uci_set(module, binary, key, value, noreturn=False):
+def uci_set(module, binary, item, key, value, noreturn=False):
     if not value:
         module.fail_json(msg="Value wasn't provided")
 
-    status, stdout, stderr = module.run_command("{} set {}='{}'".format(binary, key, value))
+    cmd = "set" if item == "option" else "add_list"
+
+    status, stdout, stderr = module.run_command("{} {} {}='{}'".format(binary, cmd, key, value))
     if status != 0:
         module.fail_json(msg="Command uci failed with: {}".format(stderr))
 
@@ -214,9 +236,9 @@ def main():
     create = val_or_none(p, "create")
 
 
-    ## Report unimplemented features
-    if item == "list":
-        module.fail_json(msg="Item of type 'list' is unimplemented for now")
+    ## Check input
+    if not name and item == "list":
+        module.fail_json(msg="Section couldn't be a list")
 
     ## Get key and value - I need to make decisions
     key, skey = get_uci_key(module, package, section, type, index, name)
@@ -233,13 +255,13 @@ def main():
         if not key:
         ## User manipulates with section only
             if sval:
-                uci_delete(module, bin_path, skey)
+                uci_delete(module, bin_path, item, skey)
             else:
                 module.exit_json(changed=False)
         else:
             ## User manipulates with key
-            if val:
-                uci_delete(module, bin_path, key)
+            if is_set(item, val, value):
+                uci_delete(module, bin_path, item, key, value)
             else:
                 module.exit_json(changed=False)
 
@@ -251,7 +273,7 @@ def main():
             if create:
                 if not type:
                     module.fail_json(msg="Is necessary to create section but type wasn't specified")
-                uci_set(module, bin_path, skey, type)
+                uci_set(module, bin_path, item, skey, type)
             else:
                 module.fail_json(msg="Section doesn't exist.")
         else:
@@ -261,14 +283,14 @@ def main():
         ## User manipulates with key
         if val:
             ## Some value under key is available
-            if val == value:
+            if is_set(item, val, value):
                 module.exit_json(changed=False)
             else:
-                uci_set(module, bin_path, key, value)
+                uci_set(module, bin_path, item, key, value)
 
         elif not val and sval and create:
             ## Option doesn't exists but is possible to create it
-            uci_set(module, bin_path, key, value)
+            uci_set(module, bin_path, item, key, value)
 
         elif not val and sval and not create:
             module.fail_json(msg="Key doesn't exist.")
@@ -277,8 +299,8 @@ def main():
             ## Option doesn't exists because section doesn't exists and is possible to create it
             if not type:
                 module.fail_json(msg="Is necessary to create section but type wasn't specified")
-            uci_set(module, bin_path, skey, type, noreturn=True)
-            uci_set(module, bin_path, key, value)
+            uci_set(module, bin_path, item, skey, type, noreturn=True)
+            uci_set(module, bin_path, item, key, value)
 
         elif not val and not sval and not create:
             module.fail_json(msg="Section doesn't exist.")
