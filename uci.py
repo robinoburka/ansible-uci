@@ -85,6 +85,12 @@ EXAMPLES = '''
 # Delete option in named section dhcp.computer.ip (doesn't delete empty section)
 - uci: p=dhcp s=computer name=ip val=1.0.0.0 state=absent
 
+# Add item to list in named section dhcp.lan.dhcp_option=4,1.0.0.15
+- uci: p=dhcp s=lan name=dhcp_option val=4,1.0.0.15 item=list
+
+# Delete item from list in named section dhcp.lan.dhcp_option=4,1.0.0.15
+- uci: p=dhcp s=lan name=dhcp_option val=4,1.0.0.5 item=list state=absent
+
 # Create new named section of type host
 - uci: p=dhcp s=computer2 type=host
 
