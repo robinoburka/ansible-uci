@@ -1,0 +1,30 @@
+This is Ansible module for manipulation with UCI configuration files.
+
+Introduction
+============
+
+UCI files are similar to ini configuration files. It is key-value storage with
+sections. The UCI file could be edited by many different tools (LuCI, uci
+command line tool, libuci) and these tools doesn't preserve the structure of file.
+Therefore, the UCI file is primitive database much more than configuration file.
+
+There are many reasons why are standard tools insufficient. Is difficult to
+edit the line in section with lineinfile module. Modules like copy or template
+doesn't respect the dynamic structure of file.
+
+So, I believe the module for direct manipulation with UCI configuration is the
+best way to do it.
+
+Installation
+============
+
+The file uci.py must be located in Ansible's path for modules. E.g. in the
+directory called "library" in the current working directory.
+
+See the documentation of Ansible for the different ways of installation.
+
+Usage
+=====
+
+Usage is documented in file uci.py in variables DOCUMENTATION and EXAMPLES (as
+upstream requires).
